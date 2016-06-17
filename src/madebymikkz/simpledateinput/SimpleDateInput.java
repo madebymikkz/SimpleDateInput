@@ -24,7 +24,9 @@
 package madebymikkz.simpledateinput;
 
 import javax.swing.*;
+import java.awt.event.*;
 import java.time.*;
+import java.util.GregorianCalendar;
 
 /**
  * A simple date input component
@@ -50,8 +52,7 @@ public class SimpleDateInput extends JPanel
 		JPanel dateRow = new JPanel();
 		
 		JLabel yearLbl = new JLabel("Year:");
-		SpinnerNumberModel yearMdl = new SpinnerNumberModel();
-		yearMdl.setValue(currentTime.getYear());
+		SpinnerNumberModel yearMdl = new SpinnerNumberModel(currentTime.getYear(), 0, 9999, 1);
 		yearSpnr = new JSpinner(yearMdl);
 		
 		JLabel monthLbl = new JLabel("Month:");
@@ -59,10 +60,10 @@ public class SimpleDateInput extends JPanel
 				"August", "September", "October", "November", "December"};
 		monthList = new JComboBox(monthArray);
 		monthList.setSelectedIndex(currentTime.getMonthValue() - 1);
+		monthList.addActionListener(new monthLnr());
 		JLabel dayLbl = new JLabel("Day:");
 		dayMdl = new SpinnerNumberModel(currentTime.getDayOfMonth(), 1, 31, 1);
 		daySpnr = new JSpinner(dayMdl);
-		setAppropriateDayLimit();
 		
 		dateRow.add(yearLbl);
 		dateRow.add(yearSpnr);
@@ -95,12 +96,44 @@ public class SimpleDateInput extends JPanel
 	// Methods
 	public String getDate()
 	{
-	// TODO: Skriv metod
-		return null;
+		int year = ((Integer)yearSpnr.getValue()).intValue();
+		int month = monthList.getSelectedIndex() + 1;
+		int day = ((Integer)daySpnr.getValue()).intValue();
+		return String.format("%04d-%02d-%02d", year, month, day);
 	}
 	
-	private void setAppropriateDayLimit()
+	public String getTime()
 	{
-	// TODO: Skriv metod
+		int hour = ((Integer)hourSpnr.getValue()).intValue();
+		int minute = ((Integer)minSpnr.getValue()).intValue();
+		return String.format("%02d:%02d", hour, minute);
+	}
+	
+	// Listeners
+	private class monthLnr implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			int month = monthList.getSelectedIndex() + 1;
+			int dayLimit = -1;
+			
+			// Set day limit
+			if (month == 2)				// February
+			{
+				GregorianCalendar c = new GregorianCalendar();
+				if (c.isLeapYear(((Integer)yearSpnr.getValue()).intValue()))
+					dayLimit = 29;
+				else
+					dayLimit = 28;
+			}
+			else if ((month % 2) > 0)	// Odd month
+				dayLimit = 31;
+			else						// Even month
+				dayLimit = 30;
+			
+			if (dayLimit > 0)
+				dayMdl.setMaximum(dayLimit);
+		}
 	}
 }
